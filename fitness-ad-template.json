@@ -1,0 +1,215 @@
+{
+  "adName": "Fitness Ad",
+  "type": "Health & Fitness",
+  "canvas": {
+    "width": 800,
+    "height": 200
+  },
+  "elements": [
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 200,
+        "fill": "#f00505",
+        "selectable": false
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 200,
+        "fill": "linear-gradient(90deg, #FF0844 0%, #FFB199 100%)",
+        "selectable": false,
+        "opacity": 0.85
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 200,
+        "fill": "linear-gradient(45deg, #000000 0%, transparent 70%)",
+        "selectable": false,
+        "opacity": 0.5
+      }
+    },
+    {
+      "type": "circle",
+      "properties": {
+        "left": 550,
+        "top": -80,
+        "radius": 180,
+        "fill": "#FF0844",
+        "opacity": 0.3,
+        "selectable": false
+      }
+    },
+    {
+      "type": "circle",
+      "properties": {
+        "left": 650,
+        "top": 50,
+        "radius": 120,
+        "fill": "#FF0844",
+        "opacity": 0.2,
+        "selectable": false
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 15,
+        "height": 200,
+        "fill": "#FF0844",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "GET IN",
+        "left": 50,
+        "top": 30,
+        "fontSize": 65,
+        "fontWeight": "900",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false,
+        "shadow": "4px 4px 8px rgba(0,0,0,0.5)"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "SHAPE",
+        "left": 50,
+        "top": 85,
+        "fontSize": 80,
+        "fontWeight": "900",
+        "fill": "#FF0844",
+        "fontFamily": "Arial Black",
+        "selectable": false,
+        "shadow": "5px 5px 10px rgba(0,0,0,0.5)"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "& BE HEALTHY",
+        "left": 50,
+        "top": 150,
+        "fontSize": 38,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false,
+        "shadow": "3px 3px 6px rgba(0,0,0,0.5)"
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 350,
+        "top": 40,
+        "width": 140,
+        "height": 45,
+        "fill": "#ffffff",
+        "rx": 25,
+        "ry": 25,
+        "selectable": false,
+        "shadow": "4px 4px 8px rgba(0,0,0,0.3)"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "JOIN NOW",
+        "left": 370,
+        "top": 50,
+        "fontSize": 20,
+        "fontWeight": "bold",
+        "fill": "#FF0844",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 450,0 L 500,200",
+        "stroke": "#ffffff",
+        "strokeWidth": 3,
+        "fill": "transparent",
+        "opacity": 0.3,
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 500,0 L 550,200",
+        "stroke": "#ffffff",
+        "strokeWidth": 3,
+        "fill": "transparent",
+        "opacity": 0.3,
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 550,0 L 600,200",
+        "stroke": "#ffffff",
+        "strokeWidth": 3,
+        "fill": "transparent",
+        "opacity": 0.3,
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "💪",
+        "left": 500,
+        "top": 40,
+        "fontSize": 60,
+        "selectable": false,
+        "angle": -15,
+        "opacity": 0.9
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "🔥",
+        "left": 600,
+        "top": 80,
+        "fontSize": 60,
+        "selectable": false,
+        "angle": 15,
+        "opacity": 0.9
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "🎯",
+        "left": 700,
+        "top": 120,
+        "fontSize": 60,
+        "selectable": false,
+        "opacity": 0.9
+      }
+    }
+  ]
+} 

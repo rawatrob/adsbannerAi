@@ -1,0 +1,199 @@
+{
+    "adName": "Dream Vacation Ad",
+    "type": "Travel & Tourism",
+    "canvas": {
+      "width": 800,
+      "height": 600
+    },
+    "elements": [
+      {
+        "type": "image",
+        "properties": {
+          "url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+          "left": 0,
+          "top": 0,
+          "width": 800,
+          "height": 600,
+          "selectable": false,
+          "scaleX": 1,
+          "scaleY": 1,
+          "opacity": 0.8
+        }
+      },
+      {
+        "type": "rect",
+        "properties": {
+          "left": 0,
+          "top": 0,
+          "width": 800,
+          "height": 600,
+          "fill": "linear-gradient(45deg, #ff6f61, #ffcc66)",
+          "selectable": false,
+          "opacity": 0.9
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "EXPERIENCE THE WORLD",
+          "left": 50,
+          "top": 30,
+          "fontSize": 70,
+          "fontWeight": "bold",
+          "fill": "#ffffff",
+          "fontFamily": "Bebas Neue",
+          "selectable": false,
+          "shadow": "5px 5px 10px rgba(0, 0, 0, 0.5)",
+          "angle": 0,
+          "stroke": "#000000",
+          "strokeWidth": 2
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "Your Adventure Starts Here",
+          "left": 50,
+          "top": 120,
+          "fontSize": 30,
+          "fontWeight": "normal",
+          "fill": "#ffffff",
+          "fontFamily": "Roboto",
+          "selectable": false,
+          "opacity": 0.9
+        }
+      },
+      {
+        "type": "rect",
+        "properties": {
+          "left": 550,
+          "top": 100,
+          "width": 200,
+          "height": 200,
+          "fill": "#ffffff",
+          "rx": 20,
+          "ry": 20,
+          "selectable": false,
+          "shadow": "5px 5px 15px rgba(0, 0, 0, 0.5)"
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "FROM",
+          "left": 600,
+          "top": 120,
+          "fontSize": 25,
+          "fontWeight": "bold",
+          "fill": "#ff6f61",
+          "fontFamily": "Arial Black",
+          "selectable": false
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "$299",
+          "left": 580,
+          "top": 150,
+          "fontSize": 80,
+          "fontWeight": "bold",
+          "fill": "#ff6f61",
+          "fontFamily": "Impact",
+          "selectable": false,
+          "shadow": "5px 5px 10px rgba(0, 0, 0, 0.5)"
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "PER PERSON",
+          "left": 570,
+          "top": 240,
+          "fontSize": 20,
+          "fontWeight": "bold",
+          "fill": "#ff6f61",
+          "fontFamily": "Arial Black",
+          "selectable": false
+        }
+      },
+      {
+        "type": "rect",
+        "properties": {
+          "left": 30,
+          "top": 400,
+          "width": 740,
+          "height": 150,
+          "fill": "rgba(255, 102, 102, 0.8)",
+          "rx": 20,
+          "ry": 20,
+          "selectable": false,
+          "shadow": "5px 5px 15px rgba(0, 0, 0, 0.5)"
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "LIMITED TIME OFFER!",
+          "left": 50,
+          "top": 420,
+          "fontSize": 50,
+          "fontWeight": "bold",
+          "fill": "#ffffff",
+          "fontFamily": "Bebas Neue",
+          "selectable": false,
+          "shadow": "4px 4px 0 rgba(255, 215, 0, 0.5)"
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "Book Now & Save 50%",
+          "left": 50,
+          "top": 485,
+          "fontSize": 40,
+          "fontWeight": "bold",
+          "fill": "#ffffff",
+          "fontFamily": "Roboto",
+          "selectable": false
+        }
+      },
+      {
+        "type": "path",
+        "properties": {
+          "path": "M 30,350 L 770,350 M 30,355 L 770,355",
+          "stroke": "#ffffff",
+          "strokeWidth": 2,
+          "opacity": 0.5,
+          "selectable": false
+        }
+      },
+      {
+        "type": "polygon",
+        "properties": {
+          "points": [
+            { "x": 400, "y": 300 },
+            { "x": 450, "y": 250 },
+            { "x": 500, "y": 300 }
+          ],
+          "fill": "#ffffff",
+          "stroke": "#ff6f61",
+          "strokeWidth": 2,
+          "selectable": false,
+          "shadow": "5px 5px 10px rgba(0, 0, 0, 0.5)"
+        }
+      },
+      {
+        "type": "text",
+        "properties": {
+          "text": "✈",
+          "left": 420,
+          "top": 270,
+          "fontSize": 60,
+          "fill": "#ff6f61",
+          "selectable": false,
+          "angle": 45
+        }
+      }
+    ]
+  }

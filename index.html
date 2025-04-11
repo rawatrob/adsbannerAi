@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fried Chicken Ad - Fabric.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+  <style>
+    body {
+      background: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      border: 2px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="adCanvas" width="800" height="600"></canvas>
+
+<script>
+  const canvas = new fabric.Canvas('adCanvas');
+
+  // Function to load and render ad from JSON
+  async function loadAdTemplate() {
+    try {
+      const response = await fetch('business-banner.json');
+      const adTemplate = await response.json();
+
+      // Set canvas dimensions
+      canvas.setWidth(adTemplate.canvas.width);
+      canvas.setHeight(adTemplate.canvas.height);
+
+      // Process each element in the template
+      for (const element of adTemplate.elements) {
+        switch (element.type) {
+          case 'background':
+            const background = new fabric.Rect(element.properties);
+            canvas.add(background);
+            canvas.sendToBack(background);
+            break;
+
+          case 'image':
+            await new Promise((resolve) => {
+              fabric.Image.fromURL(element.properties.url, function(img) {
+                img.set(element.properties);
+                canvas.add(img);
+                resolve();
+              }, { crossOrigin: 'anonymous' });
+            });
+            break;
+
+          case 'text':
+            const text = new fabric.Text(element.properties.text, element.properties);
+            canvas.add(text);
+            break;
+        }
+      }
+
+      canvas.renderAll();
+    } catch (error) {
+      console.error('Error loading ad template:', error);
+    }
+  }
+
+  // Load the ad template when the page loads
+  loadAdTemplate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+{
+  "adName": "Fried Chicken Ad",
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "elements": [
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "fill": "#1a1a1a",
+        "selectable": false
+      }
+    },
+    {
+      "type": "image",
+      "properties": {
+        "url": "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=800&q=80",
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "selectable": false,
+        "opacity": 0.8,
+        "scaleX": 1,
+        "scaleY": 1
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "fill": "rgba(0,0,0,0.4)",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "CRISPY",
+        "left": 50,
+        "top": 100,
+        "fontSize": 80,
+        "fontWeight": "800",
+        "fill": "#FFD700",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "3px 3px 5px rgba(0,0,0,0.7)",
+        "angle": -5
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "DELICIOUS",
+        "left": 50,
+        "top": 200,
+        "fontSize": 90,
+        "fontWeight": "800",
+        "fill": "#FF4500",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "3px 3px 5px rgba(0,0,0,0.7)",
+        "angle": -5
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "IRRESISTIBLE",
+        "left": 50,
+        "top": 300,
+        "fontSize": 70,
+        "fontWeight": "800",
+        "fill": "#ffffff",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "3px 3px 5px rgba(0,0,0,0.7)",
+        "angle": -5
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "LIMITED TIME OFFER!",
+        "left": 50,
+        "top": 450,
+        "fontSize": 36,
+        "fontWeight": "bold",
+        "fill": "#FFD700",
+        "fontFamily": "Arial",
+        "selectable": false,
+        "shadow": "2px 2px 4px rgba(0,0,0,0.5)"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "Order Now & Get 20% OFF",
+        "left": 50,
+        "top": 500,
+        "fontSize": 28,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial",
+        "selectable": false,
+        "shadow": "2px 2px 4px rgba(0,0,0,0.5)"
+      }
+    }
+  ]
+} 

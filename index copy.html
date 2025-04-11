@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Powered Product Banner Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+  <style>
+    body {
+      background: #f0f0f0;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .upload-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .preview-section {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    #imagePreview {
+      max-width: 300px;
+      max-height: 300px;
+      object-fit: contain;
+    }
+    canvas {
+      border: 2px solid #ccc;
+      margin-top: 20px;
+    }
+    .controls {
+      margin: 20px 0;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .template-options {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .template-option {
+      border: 2px solid #ddd;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .template-option.selected {
+      border-color: #4CAF50;
+    }
+    .description-input {
+      width: 100%;
+      min-height: 100px;
+      margin: 20px 0;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+      resize: vertical;
+    }
+    .ai-suggestions {
+      margin: 20px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 4px solid #4CAF50;
+    }
+    .theme-preview {
+      display: flex;
+      gap: 15px;
+      margin: 15px 0;
+    }
+    .color-sample {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .input-group {
+      margin: 15px 0;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .input-group input, .input-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: Arial, sans-serif;
+    }
+    .input-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .loading:after {
+      content: '...';
+      animation: dots 1.5s steps(5, end) infinite;
+    }
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="upload-section">
+    <h2>Create Your Product Banner</h2>
+    
+    <div class="input-group">
+      <label for="productImage">Product Image</label>
+      <input type="file" id="productImage" accept="image/*">
+    </div>
+
+    <div class="input-group">
+      <label for="productName">Product Name</label>
+      <input type="text" id="productName" placeholder="Enter product name">
+    </div>
+
+    <div class="input-group">
+      <label for="productDescription">Product Description</label>
+      <textarea id="productDescription" placeholder="Describe your product..."></textarea>
+    </div>
+
+    <div class="input-group">
+      <label for="productPrice">Product Price (Optional)</label>
+      <input type="text" id="productPrice" placeholder="Enter price (e.g., $99.99)">
+    </div>
+
+    <div class="input-group">
+      <label for="designPrompt">Design Style Prompt (Optional)</label>
+      <textarea id="designPrompt" placeholder="Describe your preferred design style..."></textarea>
+    </div>
+
+    <div class="preview-section">
+      <div>
+        <h3>Image Preview</h3>
+        <img id="imagePreview" src="#" alt="Preview" style="display: none;">
+      </div>
+    </div>
+
+    <div class="loading" id="loadingIndicator">Generating design</div>
+
+    <div class="controls">
+      <button id="generateBanner">Generate Banner</button>
+      <button id="downloadBanner">Download Banner</button>
+    </div>
+  </div>
+
+  <canvas id="adCanvas" width="800" height="200"></canvas>
+</div>
+
+<script>
+  let model;
+  let canvas;
+  let imageFeatures = {};
+  let currentStyleIndex = 0;
+  let currentImage = null;
+  
+  // Design patterns based on product characteristics
+  const designPatterns = {
+    luxury: {
+      patterns: ['diagonal', 'geometric', 'curved'],
+      colors: ['gold', 'silver', 'deep'],
+      elements: ['circles', 'diamonds', 'lines']
+    },
+    casual: {
+      patterns: ['dots', 'waves', 'simple'],
+      colors: ['bright', 'pastel', 'natural'],
+      elements: ['squares', 'triangles', 'organic']
+    },
+    tech: {
+      patterns: ['grid', 'circuit', 'minimal'],
+      colors: ['neon', 'monochrome', 'cool'],
+      elements: ['pixels', 'dots', 'lines']
+    },
+    nature: {
+      patterns: ['organic', 'flowing', 'leafy'],
+      colors: ['earth', 'forest', 'ocean'],
+      elements: ['curves', 'leaves', 'waves']
+    }
+  };
+
+  // Generate design theme based on product description
+  function generateDesignTheme(description, colors) {
+    const keywords = {
+      luxury: ['luxury', 'premium', 'elegant', 'sophisticated', 'gold', 'silver'],
+      tech: ['tech', 'digital', 'modern', 'smart', 'innovative'],
+      casual: ['casual', 'comfortable', 'everyday', 'simple', 'fun'],
+      nature: ['natural', 'organic', 'eco', 'green', 'sustainable']
+    };
+
+    // Determine product category based on description
+    let category = 'casual'; // default
+    let maxMatches = 0;
+    
+    Object.entries(keywords).forEach(([cat, words]) => {
+      const matches = words.filter(word => 
+        description.toLowerCase().includes(word.toLowerCase())
+      ).length;
+      if (matches > maxMatches) {
+        maxMatches = matches;
+        category = cat;
+      }
+    });
+
+    // Get pattern set for category
+    const patterns = designPatterns[category];
+
+    // Generate specific theme
+    return {
+      category,
+      mainPattern: patterns.patterns[Math.floor(Math.random() * patterns.patterns.length)],
+      accentElements: patterns.elements[Math.floor(Math.random() * patterns.elements.length)],
+      colorScheme: {
+        primary: colors[0],
+        secondary: colors[1],
+        accent: colors[2]
+      },
+      style: {
+        isGradient: Math.random() > 0.3,
+        hasPattern: Math.random() > 0.2,
+        patternOpacity: 0.1 + Math.random() * 0.3,
+        elementCount: 3 + Math.floor(Math.random() * 5)
+      }
+    };
+  }
+
+  // Create pattern based on theme
+  function createPattern(theme) {
+    switch(theme.mainPattern) {
+      case 'diagonal':
+        return createDiagonalPattern(theme);
+      case 'geometric':
+        return createGeometricPattern(theme);
+      case 'curved':
+        return createCurvedPattern(theme);
+      case 'grid':
+        return createGridPattern(theme);
+      default:
+        return createSimplePattern(theme);
+    }
+  }
+
+  function createDiagonalPattern(theme) {
+    const pattern = [];
+    const spacing = 15 + Math.random() * 10;
+    const lineWidth = 1 + Math.random() * 2;
+    
+    // Create multiple layers of diagonal lines with varying opacities
+    for(let layer = 0; layer < 4; layer++) {
+      const angle = -45 + (layer * 15);
+      const opacity = 0.05 + (layer * 0.05);
+      
+      for(let i = -canvas.height; i < canvas.width + canvas.height; i += spacing) {
+        pattern.push(new fabric.Line([i, 0, i + canvas.height, canvas.height], {
+          stroke: theme.colorScheme.accent,
+          strokeWidth: lineWidth,
+          opacity: opacity,
+          angle: angle
+        }));
+      }
+    }
+
+    // Add floating geometric shapes
+    const shapes = ['circle', 'triangle', 'rect'];
+    for(let i = 0; i < 8; i++) {
+      const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+      const size = 10 + Math.random() * 20;
+      const opacity = 0.1 + Math.random() * 0.1;
+      
+      let shape;
+      switch(shapeType) {
+        case 'circle':
+          shape = new fabric.Circle({
+            radius: size/2,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'triangle':
+          shape = new fabric.Triangle({
+            width: size,
+            height: size,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 360,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'rect':
+          shape = new fabric.Rect({
+            width: size,
+            height: size,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 45,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+      }
+      pattern.push(shape);
+    }
+    return pattern;
+  }
+
+  function createGeometricPattern(theme) {
+    const pattern = [];
+    const shapes = ['rect', 'circle', 'triangle', 'polygon'];
+    const size = 20 + Math.random() * 30;
+    
+    // Create main geometric shapes
+    for(let i = 0; i < 12; i++) {
+      const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+      const opacity = 0.1 + Math.random() * 0.15;
+      
+      let shape;
+      switch(shapeType) {
+        case 'rect':
+          shape = new fabric.Rect({
+            width: size,
+            height: size,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 45,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'circle':
+          shape = new fabric.Circle({
+            radius: size/2,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'triangle':
+          shape = new fabric.Triangle({
+            width: size,
+            height: size,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 360,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'polygon':
+          const sides = 3 + Math.floor(Math.random() * 3);
+          const points = [];
+          for(let j = 0; j < sides; j++) {
+            const angle = (j * 2 * Math.PI) / sides;
+            points.push({
+              x: Math.cos(angle) * size/2,
+              y: Math.sin(angle) * size/2
+            });
+          }
+          shape = new fabric.Polygon(points, {
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 360,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+      }
+      pattern.push(shape);
+    }
+
+    // Add connecting lines
+    for(let i = 0; i < 15; i++) {
+      const x1 = Math.random() * canvas.width;
+      const y1 = Math.random() * canvas.height;
+      const x2 = x1 + (Math.random() * 100 - 50);
+      const y2 = y1 + (Math.random() * 100 - 50);
+      
+      pattern.push(new fabric.Line([x1, y1, x2, y2], {
+        stroke: theme.colorScheme.accent,
+        strokeWidth: 1 + Math.random(),
+        opacity: 0.1 + Math.random() * 0.1
+      }));
+    }
+    return pattern;
+  }
+
+  function createCurvedPattern(theme) {
+    const pattern = [];
+    const curves = 5 + Math.floor(Math.random() * 3);
+    
+    // Create main curved lines
+    for(let i = 0; i < curves; i++) {
+      const controlPoints = [];
+      const segments = 4 + Math.floor(Math.random() * 3);
+      
+      for(let j = 0; j < segments; j++) {
+        controlPoints.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height
+        });
+      }
+      
+      let path = `M ${controlPoints[0].x} ${controlPoints[0].y}`;
+      for(let j = 1; j < controlPoints.length; j++) {
+        path += ` Q ${controlPoints[j].x} ${controlPoints[j].y},
+                  ${controlPoints[j].x} ${controlPoints[j].y}`;
+      }
+      
+      pattern.push(new fabric.Path(path, {
+        fill: 'transparent',
+        stroke: theme.colorScheme.accent,
+        strokeWidth: 2 + Math.random() * 2,
+        opacity: 0.15 + Math.random() * 0.1
+      }));
+    }
+
+    // Add floating dots along the curves
+    for(let i = 0; i < 20; i++) {
+      pattern.push(new fabric.Circle({
+        radius: 2 + Math.random() * 3,
+        left: Math.random() * canvas.width,
+        top: Math.random() * canvas.height,
+        fill: theme.colorScheme.accent,
+        opacity: 0.2 + Math.random() * 0.2
+      }));
+    }
+    return pattern;
+  }
+
+  function createGridPattern(theme) {
+    const pattern = [];
+    const spacing = 25 + Math.random() * 15;
+    const dotSize = 2 + Math.random() * 2;
+    
+    // Create grid lines with varying opacities
+    for(let x = 0; x < canvas.width; x += spacing) {
+      pattern.push(new fabric.Line([x, 0, x, canvas.height], {
+        stroke: theme.colorScheme.accent,
+        strokeWidth: 0.5 + Math.random(),
+        opacity: 0.05 + Math.random() * 0.05
+      }));
+    }
+    for(let y = 0; y < canvas.height; y += spacing) {
+      pattern.push(new fabric.Line([0, y, canvas.width, y], {
+        stroke: theme.colorScheme.accent,
+        strokeWidth: 0.5 + Math.random(),
+        opacity: 0.05 + Math.random() * 0.05
+      }));
+    }
+    
+    // Add dots at intersections with varying sizes
+    for(let x = 0; x < canvas.width; x += spacing) {
+      for(let y = 0; y < canvas.height; y += spacing) {
+        if(Math.random() > 0.7) {
+          pattern.push(new fabric.Circle({
+            left: x,
+            top: y,
+            radius: dotSize + Math.random() * 2,
+            fill: theme.colorScheme.accent,
+            opacity: 0.2 + Math.random() * 0.2
+          }));
+        }
+      }
+    }
+
+    // Add floating elements
+    for(let i = 0; i < 10; i++) {
+      const size = 5 + Math.random() * 10;
+      pattern.push(new fabric.Circle({
+        radius: size/2,
+        left: Math.random() * canvas.width,
+        top: Math.random() * canvas.height,
+        fill: theme.colorScheme.accent,
+        opacity: 0.1 + Math.random() * 0.1
+      }));
+    }
+    return pattern;
+  }
+
+  function createSimplePattern(theme) {
+    const pattern = [];
+    const elementCount = 15;
+    const shapes = ['circle', 'rect', 'triangle', 'polygon'];
+    
+    // Create main shapes
+    for(let i = 0; i < elementCount; i++) {
+      const shapeType = shapes[Math.floor(Math.random() * shapes.length)];
+      const size = 8 + Math.random() * 20;
+      const opacity = 0.1 + Math.random() * 0.15;
+      
+      let shape;
+      switch(shapeType) {
+        case 'circle':
+          shape = new fabric.Circle({
+            radius: size/2,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'rect':
+          shape = new fabric.Rect({
+            width: size,
+            height: size,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 45,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'triangle':
+          shape = new fabric.Triangle({
+            width: size,
+            height: size,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 360,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+        case 'polygon':
+          const sides = 3 + Math.floor(Math.random() * 3);
+          const points = [];
+          for(let j = 0; j < sides; j++) {
+            const angle = (j * 2 * Math.PI) / sides;
+            points.push({
+              x: Math.cos(angle) * size/2,
+              y: Math.sin(angle) * size/2
+            });
+          }
+          shape = new fabric.Polygon(points, {
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            angle: Math.random() * 360,
+            fill: theme.colorScheme.accent,
+            opacity: opacity
+          });
+          break;
+      }
+      pattern.push(shape);
+    }
+
+    // Add connecting lines
+    for(let i = 0; i < 10; i++) {
+      const x1 = Math.random() * canvas.width;
+      const y1 = Math.random() * canvas.height;
+      const x2 = x1 + (Math.random() * 100 - 50);
+      const y2 = y1 + (Math.random() * 100 - 50);
+      
+      pattern.push(new fabric.Line([x1, y1, x2, y2], {
+        stroke: theme.colorScheme.accent,
+        strokeWidth: 1 + Math.random(),
+        opacity: 0.1 + Math.random() * 0.1
+      }));
+    }
+    return pattern;
+  }
+
+  // Update AI suggestions display
+  function updateAISuggestions(theme) {
+    const suggestionsDiv = document.getElementById('aiSuggestions');
+    suggestionsDiv.innerHTML = `
+      <p><strong>Design Theme:</strong> ${theme.category} style</p>
+      <p><strong>Pattern:</strong> ${theme.mainPattern}</p>
+      <p><strong>Color Scheme:</strong></p>
+      <div class="theme-preview">
+        <div class="color-sample" style="background-color: ${theme.colorScheme.primary}"></div>
+        <div class="color-sample" style="background-color: ${theme.colorScheme.secondary}"></div>
+        <div class="color-sample" style="background-color: ${theme.colorScheme.accent}"></div>
+      </div>
+    `;
+  }
+
+  // Calculate optimal font size based on text length and available space
+  function calculateOptimalFontSize(text, maxWidth, maxHeight, minSize = 12, maxSize = 48) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let fontSize = maxSize;
+    
+    do {
+      ctx.font = `${fontSize}px Arial Black`;
+      const metrics = ctx.measureText(text);
+      if (metrics.width <= maxWidth && fontSize * 1.2 <= maxHeight) {
+        break;
+      }
+      fontSize -= 2;
+    } while (fontSize >= minSize);
+    
+    return fontSize;
+  }
+
+  // Generate random color palette
+  function generateColorPalette() {
+    const palettes = [
+      ['#FF6B6B', '#4ECDC4', '#45B7D1'], // Warm & Cool
+      ['#2C3E50', '#3498DB', '#E74C3C'], // Professional
+      ['#6C5CE7', '#A8A4FF', '#FFD166'], // Creative
+      ['#2D3436', '#00B894', '#FDCB6E'], // Natural
+      ['#E84393', '#6C5CE7', '#00CEC9'], // Vibrant
+      ['#2D3436', '#636E72', '#B2BEC3']  // Monochrome
+    ];
+    return palettes[Math.floor(Math.random() * palettes.length)];
+  }
+
+  // Generate random pattern type
+  function generateRandomPattern() {
+    const patterns = ['diagonal', 'geometric', 'curved', 'grid', 'dots', 'waves'];
+    return patterns[Math.floor(Math.random() * patterns.length)];
+  }
+
+  // Generate modern color palettes based on image colors
+  function generateModernPalettes(imageColors) {
+    // Ensure imageColors are properly formatted
+    const formatColor = (color) => {
+      if (!color) return '128,128,128';
+      // If color is already in rgb format, extract the values
+      if (color.startsWith('rgb')) {
+        const matches = color.match(/\d+,\s*\d+,\s*\d+/);
+        return matches ? matches[0] : '128,128,128';
+      }
+      return color;
+    };
+
+    const colors = Array.isArray(imageColors) ? 
+      imageColors.map(formatColor) : 
+      ['128,128,128', '200,200,200', '50,50,50'];
+
+    const palettes = [
+      {
+        name: 'vibrant',
+        colors: [
+          `rgba(${colors[0]}, 0.9)`,
+          `rgba(${colors[1]}, 0.8)`,
+          `rgba(${colors[2]}, 0.7)`
+        ],
+        accent: '#FFD700'
+      },
+      {
+        name: 'gradient',
+        colors: [
+          'rgba(255,255,255,0.95)',
+          `rgba(${colors[0]}, 0.3)`,
+          `rgba(${colors[1]}, 0.5)`
+        ],
+        accent: `rgba(${colors[2]}, 0.8)`
+      },
+      {
+        name: 'modern',
+        colors: [
+          'rgba(240,240,240,0.95)',
+          `rgba(${colors[0]}, 0.6)`,
+          '#2C3E50'
+        ],
+        accent: '#E74C3C'
+      }
+    ];
+    return palettes[Math.floor(Math.random() * palettes.length)];
+  }
+
+  // Call ChatGPT API to generate design
+  async function generateDesignPrompt(productDetails, imageColors) {
+    try {
+      // Format colors to ensure they're in the correct format
+      const formatColor = (color) => {
+        if (!color) return '128,128,128';
+        if (color.startsWith('rgb')) {
+          const matches = color.match(/\d+,\s*\d+,\s*\d+/);
+          return matches ? matches[0] : '128,128,128';
+        }
+        return color;
+      };
+
+      const colors = Array.isArray(imageColors) ? 
+        imageColors.map(formatColor) : 
+        ['128,128,128', '200,200,200', '50,50,50'];
+
+      // Return design specifications
+      return {
+        design: {
+          background: {
+            type: "gradient",
+            colors: [
+              `rgba(${colors[0]}, 0.9)`,
+              `rgba(${colors[1]}, 0.7)`,
+              `rgba(${colors[2]}, 0.5)`
+            ],
+            pattern: "geometric",
+            elements: {
+              type: "geometric",
+              density: "medium",
+              style: "minimal"
+            }
+          },
+          imageFrame: {
+            type: "border",
+            style: "modern",
+            elements: ["border", "shadow"],
+            color: `rgba(${colors[0]}, 0.8)`
+          },
+          text: {
+            title: productDetails.name,
+            subtitle: productDetails.description,
+            price: productDetails.price || '',
+            button: "Shop Now"
+          },
+          layout: {
+            imagePosition: "left",
+            textAlignment: "left"
+          }
+        }
+      };
+    } catch (error) {
+      console.error('Error generating design:', error);
+      // Return default design specs if there's an error
+      return {
+        design: {
+          background: {
+            type: "gradient",
+            colors: ["rgba(255,255,255,0.9)", "rgba(240,240,240,0.7)", "rgba(220,220,220,0.5)"],
+            pattern: "geometric",
+            elements: {
+              type: "geometric",
+              density: "medium",
+              style: "minimal"
+            }
+          },
+          imageFrame: {
+            type: "border",
+            style: "modern",
+            elements: ["border", "shadow"],
+            color: "rgba(44,62,80,0.8)"
+          },
+          text: {
+            title: productDetails.name,
+            subtitle: productDetails.description,
+            price: productDetails.price || '',
+            button: "Shop Now"
+          },
+          layout: {
+            imagePosition: "left",
+            textAlignment: "left"
+          }
+        }
+      };
+    }
+  }
+
+  // Create modern background patterns
+  function createModernPattern(theme, imageColors) {
+    const patterns = [];
+    const style = Math.floor(Math.random() * 4);
+
+    // Format color helper function
+    const formatColor = (color) => {
+      if (!color) return '128,128,128';
+      if (color.startsWith('rgb')) {
+        const matches = color.match(/\d+,\s*\d+,\s*\d+/);
+        return matches ? matches[0] : '128,128,128';
+      }
+      return color;
+    };
+
+    switch(style) {
+      case 0: // Floating shapes with blur
+        for(let i = 0; i < 15; i++) {
+          const size = 20 + Math.random() * 60;
+          const colorValues = formatColor(imageColors[Math.floor(Math.random() * imageColors.length)]);
+          const shape = new fabric.Circle({
+            radius: size/2,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            fill: `rgba(${colorValues}, 0.2)`,
+            opacity: 0.3,
+            shadow: new fabric.Shadow({
+              color: 'rgba(0,0,0,0.1)',
+              blur: 15,
+              offsetX: 10,
+              offsetY: 10
+            })
+          });
+          patterns.push(shape);
+        }
+        break;
+
+      case 1: // Modern grid with accent lines
+        const gridSize = 40;
+        for(let x = 0; x < canvas.width; x += gridSize) {
+          const line = new fabric.Line([x, 0, x, canvas.height], {
+            stroke: theme.accent,
+            strokeWidth: 0.5,
+            opacity: 0.1
+          });
+          patterns.push(line);
+        }
+        
+        // Add accent diagonal lines
+        for(let i = 0; i < 5; i++) {
+          const line = new fabric.Line([
+            Math.random() * canvas.width,
+            0,
+            Math.random() * canvas.width,
+            canvas.height
+          ], {
+            stroke: theme.accent,
+            strokeWidth: 2,
+            opacity: 0.3
+          });
+          patterns.push(line);
+        }
+        break;
+
+      case 2: // Dynamic waves
+        for(let i = 0; i < 3; i++) {
+          const points = [];
+          const segments = 5;
+          const amplitude = 30 + Math.random() * 20;
+          
+          for(let j = 0; j <= segments; j++) {
+            points.push({
+              x: (canvas.width * j) / segments,
+              y: (canvas.height/2) + Math.sin(j * Math.PI/2) * amplitude
+            });
+          }
+          
+          const path = new fabric.Path(points.reduce((acc, point, idx) => {
+            if(idx === 0) return `M ${point.x} ${point.y}`;
+            const cp1x = points[idx-1].x + (point.x - points[idx-1].x) * 0.5;
+            const cp1y = points[idx-1].y;
+            const cp2x = points[idx-1].x + (point.x - points[idx-1].x) * 0.5;
+            const cp2y = point.y;
+            return `${acc} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${point.x} ${point.y}`;
+          }, ''), {
+            fill: 'transparent',
+            stroke: theme.accent,
+            strokeWidth: 1.5,
+            opacity: 0.2
+          });
+          patterns.push(path);
+        }
+        break;
+
+      case 3: // Minimal dots with gradient overlay
+        for(let i = 0; i < 30; i++) {
+          const dot = new fabric.Circle({
+            radius: 2 + Math.random() * 3,
+            left: Math.random() * canvas.width,
+            top: Math.random() * canvas.height,
+            fill: theme.accent,
+            opacity: 0.15
+          });
+          patterns.push(dot);
+        }
+        
+        // Add gradient overlay with properly formatted colors
+        const colorValues = formatColor(imageColors[0]);
+        const gradient = new fabric.Gradient({
+          type: 'linear',
+          coords: {
+            x1: 0,
+            y1: 0,
+            x2: canvas.width,
+            y2: canvas.height
+          },
+          colorStops: [
+            { offset: 0, color: 'rgba(255,255,255,0.1)' },
+            { offset: 1, color: `rgba(${colorValues}, 0.05)` }
+          ]
+        });
+        
+        const overlay = new fabric.Rect({
+    left: 0,
+    top: 0,
+    width: canvas.width,
+    height: canvas.height,
+          fill: gradient,
+          opacity: 0.3
+        });
+        patterns.push(overlay);
+        break;
+    }
+    return patterns;
+  }
+
+  // Modified generateBanner function
+  async function generateBanner(designSpecs, imageElement) {
+    try {
+      canvas.clear();
+      
+      // Extract image colors
+      const imageColors = await extractDominantColors(imageElement);
+      
+      // Select a random design style based on the reference examples
+      const designStyle = Math.floor(Math.random() * 6);
+      
+      // Format any colors for consistent usage
+      const formatColor = (color) => {
+        if (!color) return '128,128,128';
+        if (color.startsWith('rgb')) {
+          const matches = color.match(/\d+,\s*\d+,\s*\d+/);
+          return matches ? matches[0] : '128,128,128';
+        }
+        return color;
+      };
+      
+      // Ensure we have valid colors to work with
+      const colors = imageColors.map(formatColor);
+      
+      // Pick background & accent colors based on design style
+      let bgColor, accentColor, textColor, btnColor, frameColor;
+      
+      switch(designStyle) {
+        case 0: // Bold dark theme (like Black Friday example)
+          bgColor = '#000000';
+          accentColor = colors[0] || 'rgb(227,66,52)';
+          textColor = '#FFFFFF';
+          btnColor = accentColor;
+          frameColor = '#FFFFFF';
+          break;
+          
+        case 1: // Fashion theme (like pink fashion example)
+          bgColor = '#FFB6C1';
+          accentColor = '#333333';
+          textColor = '#FFFFFF';
+          btnColor = '#0047AB';
+          frameColor = '#000000';
+          break;
+          
+        case 2: // Food theme (like pizza example)
+          bgColor = '#4B0082';
+          accentColor = '#FFA500';
+          textColor = '#FFFFFF';
+          btnColor = '#FFA500';
+          frameColor = accentColor;
+          break;
+          
+        case 3: // Product theme (like shoe example)
+          bgColor = '#FF1493';
+          accentColor = '#FFD700';
+          textColor = '#FFFFFF';
+          btnColor = '#800080';
+          frameColor = '#FFFFFF';
+          break;
+          
+        case 4: // Tech theme (like Reebok example)
+          bgColor = '#00008B';
+          accentColor = '#32CD32';
+          textColor = '#FFFFFF';
+          btnColor = '#1E90FF';
+          frameColor = '#FFFFFF';
+          break;
+          
+        case 5: // Real estate theme (like modern home example)
+          bgColor = '#00008B';
+          accentColor = '#87CEEB';
+          textColor = '#FFFFFF';
+          btnColor = '#87CEEB';
+          frameColor = '#FFFFFF';
+          break;
+      }
+      
+      // Create base background
+      const bg = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: canvas.width,
+        height: canvas.height,
+        fill: bgColor
+      });
+      canvas.add(bg);
+      
+      // Add dynamic design elements based on style
+      switch(designStyle) {
+        case 0: // Black Friday style
+          // Add splatter effect
+          for (let i = 0; i < 40; i++) {
+            const size = 2 + Math.random() * 8;
+            const splatter = new fabric.Circle({
+              radius: size,
+              left: Math.random() * canvas.width,
+              top: Math.random() * canvas.height,
+              fill: accentColor,
+              opacity: 0.6 + Math.random() * 0.4
+            });
+            canvas.add(splatter);
+          }
+          
+          // Add diagonal lines
+          for (let i = 0; i < 2; i++) {
+            const line = new fabric.Rect({
+              left: -100 + Math.random() * 200,
+              top: -100,
+              width: canvas.width + 200,
+              height: 60 + Math.random() * 40,
+              angle: 30 + Math.random() * 20,
+              fill: i === 0 ? accentColor : '#006400',
+              opacity: 0.7
+            });
+            canvas.add(line);
+          }
+          break;
+          
+        case 1: // Fashion style
+          // Add diamond shape frames
+          const diamond = new fabric.Polygon([
+            {x: canvas.width*0.6, y: canvas.height*0.2},
+            {x: canvas.width*0.8, y: canvas.height*0.5},
+            {x: canvas.width*0.6, y: canvas.height*0.8},
+            {x: canvas.width*0.4, y: canvas.height*0.5}
+          ], {
+            fill: 'rgba(0,0,0,0.8)',
+            stroke: accentColor,
+            strokeWidth: 3
+          });
+          canvas.add(diamond);
+          
+          // Add dots
+          for (let i = 0; i < 6; i++) {
+            const dot = new fabric.Circle({
+              radius: 5,
+              left: canvas.width*0.3 + (i*20),
+              top: canvas.height*0.5 + (i*20),
+              fill: accentColor
+            });
+            canvas.add(dot);
+          }
+          
+          // Add stripe background element
+          const stripe = new fabric.Rect({
+            left: -50,
+            top: -50,
+            width: canvas.width*0.5,
+            height: canvas.height + 100,
+            fill: accentColor,
+            opacity: 0.7,
+            angle: 5
+          });
+          canvas.insertAt(stripe, 1);
+          break;
+          
+        case 2: // Food style
+          // Add wave shape at top
+          const wavePoints = [];
+          for (let i = 0; i <= 10; i++) {
+            wavePoints.push({
+              x: canvas.width * (i/10),
+              y: 60 + Math.sin(i*Math.PI/5) * 20
+            });
+          }
+          wavePoints.push({x: canvas.width, y: 0});
+          wavePoints.push({x: 0, y: 0});
+          
+          const wave = new fabric.Polygon(wavePoints, {
+            fill: accentColor,
+            opacity: 0.9
+          });
+          canvas.insertAt(wave, 1);
+          
+          // Add bottom wave
+          const bottomWavePoints = [];
+          for (let i = 0; i <= 10; i++) {
+            bottomWavePoints.push({
+              x: canvas.width * (i/10),
+              y: canvas.height - 60 + Math.sin(i*Math.PI/5) * 20
+            });
+          }
+          bottomWavePoints.push({x: canvas.width, y: canvas.height});
+          bottomWavePoints.push({x: 0, y: canvas.height});
+          
+          const bottomWave = new fabric.Polygon(bottomWavePoints, {
+            fill: accentColor,
+            opacity: 0.9
+          });
+          canvas.insertAt(bottomWave, 1);
+          
+          // Add circle for price
+          const priceCircle = new fabric.Circle({
+            radius: 40,
+            left: canvas.width*0.75,
+            top: canvas.height*0.3,
+            fill: '#FFFFFF',
+            stroke: accentColor,
+            strokeWidth: 2
+          });
+          canvas.add(priceCircle);
+          break;
+          
+        case 3: // Product style (shoe)
+          // Add radial lines
+          for (let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const line = new fabric.Line([
+              canvas.width*0.5, 0,
+              canvas.width*0.5 + Math.cos(angle * Math.PI/180) * canvas.width,
+              Math.sin(angle * Math.PI/180) * canvas.height
+            ], {
+              stroke: 'rgba(255,255,255,0.3)',
+              strokeWidth: 2
+            });
+            canvas.insertAt(line, 1);
+          }
+          break;
+          
+        case 4: // Tech style (like Reebok)
+          // Add triangles
+          for (let i = 0; i < 8; i++) {
+            const size = 15 + Math.random() * 25;
+            const triangle = new fabric.Triangle({
+              width: size,
+              height: size,
+              left: Math.random() * canvas.width,
+              top: Math.random() * canvas.height,
+              angle: Math.random() * 360,
+              fill: i % 2 === 0 ? accentColor : '#FFFFFF',
+              opacity: 0.3 + Math.random() * 0.5
+            });
+            canvas.add(triangle);
+          }
+          
+          // Add curved edge
+          const curve = new fabric.Path('M 0 0 Q 200 50, 0 200', {
+            fill: accentColor,
+            opacity: 0.7,
+            left: canvas.width*0.7,
+            top: 0,
+            scaleX: 1.5,
+            scaleY: 1
+          });
+          canvas.insertAt(curve, 1);
+          break;
+          
+        case 5: // Real estate style
+          // Add diagonal split
+          const split = new fabric.Polygon([
+            {x: 0, y: 0},
+            {x: canvas.width*0.5, y: 0},
+            {x: canvas.width*0.9, y: canvas.height},
+            {x: 0, y: canvas.height}
+          ], {
+            fill: accentColor,
+            opacity: 0.9
+          });
+          canvas.insertAt(split, 1);
+          
+          // Add circles for features
+          for (let i = 0; i < 3; i++) {
+            const circle = new fabric.Circle({
+              radius: 30,
+              left: canvas.width*0.8,
+              top: canvas.height*0.3 + (i*60),
+              fill: accentColor,
+              opacity: 0.8
+            });
+            canvas.add(circle);
+          }
+          break;
+      }
+      
+      // Add product image with custom framing based on style
+      if (imageElement) {
+        const imgUrl = imageElement.src;
+        await new Promise((resolve, reject) => {
+          fabric.Image.fromURL(imgUrl, function(img) {
+            if (!img) {
+              reject(new Error('Failed to load image'));
+              return;
+            }
+            
+            let frameType, imgLeft, imgTop, imgMaxWidth, imgMaxHeight;
+            
+            switch(designStyle) {
+              case 0: // Black Friday style - rectangular with offset
+                frameType = 'rect';
+                imgLeft = canvas.width * 0.25;
+                imgTop = canvas.height * 0.5;
+                imgMaxWidth = canvas.width * 0.4;
+                imgMaxHeight = canvas.height * 0.8;
+                break;
+                
+              case 1: // Fashion style - diamond frame
+                frameType = 'diamond';
+                imgLeft = canvas.width * 0.7;
+                imgTop = canvas.height * 0.5;
+                imgMaxWidth = canvas.width * 0.35;
+                imgMaxHeight = canvas.height * 0.8;
+                break;
+                
+              case 2: // Food style - circle frame
+                frameType = 'circle';
+                imgLeft = canvas.width * 0.35;
+                imgTop = canvas.height * 0.5;
+                imgMaxWidth = canvas.width * 0.35;
+                imgMaxHeight = canvas.height * 0.8;
+                break;
+                
+              case 3: // Product style - rectangular with shadow
+                frameType = 'rect';
+                imgLeft = canvas.width * 0.7;
+                imgTop = canvas.height * 0.5;
+                imgMaxWidth = canvas.width * 0.45;
+                imgMaxHeight = canvas.height * 0.8;
+                break;
+                
+              case 4: // Tech style - angled rectangle
+                frameType = 'rect-angled';
+                imgLeft = canvas.width * 0.7;
+                imgTop = canvas.height * 0.5;
+                imgMaxWidth = canvas.width * 0.45;
+                imgMaxHeight = canvas.height * 0.8;
+                break;
+                
+              case 5: // Real estate style - rounded rectangle
+                frameType = 'rounded-rect';
+                imgLeft = canvas.width * 0.3;
+                imgTop = canvas.height * 0.5;
+                imgMaxWidth = canvas.width * 0.45;
+                imgMaxHeight = canvas.height * 0.8;
+                break;
+            }
+            
+            // Calculate scale to fit within max dimensions while maintaining aspect ratio
+            const scaleX = imgMaxWidth / img.width;
+            const scaleY = imgMaxHeight / img.height;
+            const scale = Math.min(scaleX, scaleY);
+            
+            // Calculate centered position
+            const scaledWidth = img.width * scale;
+            const scaledHeight = img.height * scale;
+            
+            // Set image properties
+            img.set({
+              scaleX: scale,
+              scaleY: scale,
+              left: imgLeft - (scaledWidth / 2),
+              top: imgTop - (scaledHeight / 2),
+              originX: 'center',
+              originY: 'center'
+            });
+            
+            // Add frame based on style
+            if (frameType === 'rect') {
+              // Add white background for the image
+              const imageBg = new fabric.Rect({
+                left: imgLeft - (scaledWidth / 2) - 10,
+                top: imgTop - (scaledHeight / 2) - 10,
+                width: scaledWidth + 20,
+                height: scaledHeight + 20,
+                fill: '#FFFFFF',
+                rx: 10,
+                ry: 10,
+                shadow: new fabric.Shadow({
+                  color: 'rgba(0,0,0,0.3)',
+                  blur: 15,
+                  offsetX: 5,
+                  offsetY: 5
+                })
+              });
+              canvas.add(imageBg);
+              canvas.add(img);
+            } 
+            else if (frameType === 'diamond') {
+              // Create diamond clipPath for image
+              const diamondClip = new fabric.Polygon([
+                {x: scaledWidth/2, y: 0},
+                {x: scaledWidth, y: scaledHeight/2},
+                {x: scaledWidth/2, y: scaledHeight},
+                {x: 0, y: scaledHeight/2}
+              ], {
+                left: -scaledWidth/2,
+                top: -scaledHeight/2
+              });
+              
+              img.clipPath = diamondClip;
+              canvas.add(img);
+            }
+            else if (frameType === 'circle') {
+              // Create circular clipPath for image
+              const circleClip = new fabric.Circle({
+                radius: Math.min(scaledWidth, scaledHeight) / 2,
+                originX: 'center',
+                originY: 'center',
+                left: 0,
+                top: 0
+              });
+              
+              img.clipPath = circleClip;
+              canvas.add(img);
+            }
+            else if (frameType === 'rect-angled') {
+              // Add white background for the angled image
+              const angleBg = new fabric.Rect({
+                left: imgLeft - (scaledWidth / 2) - 10,
+                top: imgTop - (scaledHeight / 2) - 10,
+                width: scaledWidth + 20,
+                height: scaledHeight + 20,
+                fill: '#FFFFFF',
+                angle: -10,
+                shadow: new fabric.Shadow({
+                  color: 'rgba(0,0,0,0.3)',
+                  blur: 15,
+                  offsetX: 5,
+                  offsetY: 5
+                })
+              });
+              canvas.add(angleBg);
+              
+              img.set({
+                angle: -10
+              });
+              canvas.add(img);
+            }
+            else if (frameType === 'rounded-rect') {
+              // Create rounded rectangle clipPath
+              const roundedRectClip = new fabric.Rect({
+                width: scaledWidth,
+                height: scaledHeight,
+                rx: 20,
+                ry: 20,
+                left: -scaledWidth/2,
+                top: -scaledHeight/2
+              });
+              
+              // Add white background
+              const roundedBg = new fabric.Rect({
+                left: imgLeft - (scaledWidth / 2) - 10,
+                top: imgTop - (scaledHeight / 2) - 10,
+                width: scaledWidth + 20,
+                height: scaledHeight + 20,
+                fill: '#FFFFFF',
+                rx: 20,
+                ry: 20,
+                shadow: new fabric.Shadow({
+                  color: 'rgba(0,0,0,0.3)',
+                  blur: 15,
+                  offsetX: 5,
+                  offsetY: 5
+                })
+              });
+              canvas.add(roundedBg);
+              
+              img.clipPath = roundedRectClip;
+              canvas.add(img);
+            }
+            
+            resolve();
+          }, { crossOrigin: 'anonymous' });
+        });
+      }
+      
+      // Add text content based on style
+      const title = designSpecs.design.text.title;
+      const subtitle = designSpecs.design.text.subtitle;
+      const priceText = designSpecs.design.text.price;
+      
+      let titleLeft, titleTop, titleWidth, titleFontSize, subtitleLeft, subtitleTop;
+      
+      switch(designStyle) {
+        case 0: // Black Friday style - big centered text
+          titleLeft = canvas.width * 0.5;
+          titleTop = canvas.height * 0.35;
+          titleWidth = canvas.width * 0.9;
+          titleFontSize = 60;
+          subtitleLeft = canvas.width * 0.5;
+          subtitleTop = canvas.height * 0.2;
+          break;
+          
+        case 1: // Fashion style - left aligned
+          titleLeft = canvas.width * 0.15;
+          titleTop = canvas.height * 0.6;
+          titleWidth = canvas.width * 0.4;
+          titleFontSize = 40;
+          subtitleLeft = canvas.width * 0.15;
+          subtitleTop = canvas.height * 0.75;
+          break;
+          
+        case 2: // Food style - top text
+          titleLeft = canvas.width * 0.5;
+          titleTop = canvas.height * 0.2;
+          titleWidth = canvas.width * 0.7;
+          titleFontSize = 40;
+          subtitleLeft = canvas.width * 0.5;
+          subtitleTop = canvas.height * 0.85;
+          break;
+          
+        case 3: // Product style - left aligned
+          titleLeft = canvas.width * 0.2;
+          titleTop = canvas.height * 0.3;
+          titleWidth = canvas.width * 0.4;
+          titleFontSize = 45;
+          subtitleLeft = canvas.width * 0.2;
+          subtitleTop = canvas.height * 0.45;
+          break;
+          
+        case 4: // Tech style - left aligned
+          titleLeft = canvas.width * 0.25;
+          titleTop = canvas.height * 0.3;
+          titleWidth = canvas.width * 0.4;
+          titleFontSize = 40;
+          subtitleLeft = canvas.width * 0.25;
+          subtitleTop = canvas.height * 0.85;
+          break;
+          
+        case 5: // Real estate style - left aligned
+          titleLeft = canvas.width * 0.2;
+          titleTop = canvas.height * 0.2;
+          titleWidth = canvas.width * 0.4;
+          titleFontSize = 40;
+          subtitleLeft = canvas.width * 0.2;
+          subtitleTop = canvas.height * 0.3;
+          break;
+      }
+      
+      // Create title with automatic text wrapping
+      const titleWords = title.split(' ');
+      let titleLines = [''];
+      let currentLine = 0;
+      
+      titleWords.forEach(word => {
+        const testLine = titleLines[currentLine] + ' ' + word;
+        const testText = new fabric.Text(testLine, {
+          fontSize: titleFontSize,
+          fontFamily: 'Arial Black'
+        });
+        
+        if (testText.width > titleWidth) {
+          currentLine++;
+          titleLines[currentLine] = word;
+        } else {
+          titleLines[currentLine] = testLine;
+        }
+      });
+      
+      // Add title text
+      titleLines.forEach((line, index) => {
+        const titleText = new fabric.Text(line.trim(), {
+          left: titleLeft,
+          top: titleTop + (index * titleFontSize),
+          fontSize: titleFontSize,
+          fontFamily: 'Arial Black',
+          fill: textColor,
+          originX: designStyle !== 1 && designStyle !== 3 && designStyle !== 4 && designStyle !== 5 ? 'center' : 'left',
+          originY: 'center',
+          fontWeight: 'bold',
+          shadow: new fabric.Shadow({
+            color: 'rgba(0,0,0,0.3)',
+            blur: 5,
+            offsetX: 3,
+            offsetY: 3
+          })
+        });
+        canvas.add(titleText);
+      });
+      
+      // Add subtitle
+      const subtitleText = new fabric.Text(subtitle.slice(0, 50) + (subtitle.length > 50 ? '...' : ''), {
+        left: subtitleLeft,
+        top: subtitleTop,
+        fontSize: 20,
+        fontFamily: 'Arial',
+        fill: textColor,
+        originX: designStyle !== 1 && designStyle !== 3 && designStyle !== 4 && designStyle !== 5 ? 'center' : 'left',
+        originY: 'center',
+        opacity: 0.9
+      });
+      canvas.add(subtitleText);
+      
+      // Add price if provided
+      if (priceText) {
+        let priceLeft, priceTop;
+        
+        switch(designStyle) {
+          case 0: // Black Friday style
+            priceLeft = canvas.width * 0.5;
+            priceTop = canvas.height * 0.7;
+            
+            const priceOffer = new fabric.Text(priceText, {
+              left: priceLeft,
+              top: priceTop,
+              fontSize: 35,
+              fontFamily: 'Arial Black',
+              fill: '#FFFFFF',
+              originX: 'center',
+              originY: 'center',
+              fontWeight: 'bold'
+            });
+            canvas.add(priceOffer);
+            break;
+            
+          case 1: // Fashion style
+            priceLeft = canvas.width * 0.15;
+            priceTop = canvas.height * 0.3;
+            
+            const discountCircle = new fabric.Circle({
+              radius: 40,
+              left: priceLeft - 40,
+              top: priceTop - 40,
+              fill: '#0047AB',
+              stroke: '#FFFFFF',
+              strokeWidth: 2
+            });
+            canvas.add(discountCircle);
+            
+            const discountText = new fabric.Text(priceText, {
+              left: priceLeft,
+              top: priceTop,
+              fontSize: 22,
+              fontFamily: 'Arial Black',
+              fill: '#FFFFFF',
+              originX: 'center',
+              originY: 'center',
+              fontWeight: 'bold'
+            });
+            canvas.add(discountText);
+            break;
+            
+          case 2: // Food style
+            priceLeft = canvas.width * 0.75;
+            priceTop = canvas.height * 0.3;
+            
+            const priceText = new fabric.Text(priceText, {
+              left: priceLeft,
+              top: priceTop,
+              fontSize: 24,
+              fontFamily: 'Arial Black',
+              fill: accentColor,
+              originX: 'center',
+              originY: 'center',
+              fontWeight: 'bold'
+            });
+            canvas.add(priceText);
+            break;
+            
+          default:
+            priceLeft = canvas.width * 0.8;
+            priceTop = canvas.height * 0.2;
+            
+            const priceBadge = new fabric.Circle({
+              radius: 35,
+              left: priceLeft - 35,
+              top: priceTop - 35,
+              fill: accentColor
+            });
+            canvas.add(priceBadge);
+            
+            const badgeText = new fabric.Text(priceText, {
+              left: priceLeft,
+              top: priceTop,
+              fontSize: 18,
+              fontFamily: 'Arial Black',
+              fill: '#FFFFFF',
+              originX: 'center',
+              originY: 'center',
+              fontWeight: 'bold'
+            });
+            canvas.add(badgeText);
+            break;
+        }
+      }
+      
+      // Add call-to-action button
+      let btnLeft, btnTop, btnWidth, btnHeight, btnText;
+      
+      switch(designStyle) {
+        case 0: // Black Friday
+          btnLeft = canvas.width * 0.5;
+          btnTop = canvas.height * 0.85;
+          btnWidth = 180;
+          btnHeight = 50;
+          btnText = 'SHOP NOW';
+          break;
+          
+        case 1: // Fashion
+          btnLeft = canvas.width * 0.15;
+          btnTop = canvas.height * 0.85;
+          btnWidth = 150;
+          btnHeight = 40;
+          btnText = 'SHOP NOW';
+          break;
+          
+        case 2: // Food
+          btnLeft = canvas.width * 0.2;
+          btnTop = canvas.height * 0.7;
+          btnWidth = 160;
+          btnHeight = 45;
+          btnText = 'ORDER NOW';
+          break;
+          
+        case 3: // Product
+          btnLeft = canvas.width * 0.2;
+          btnTop = canvas.height * 0.7;
+          btnWidth = 150;
+          btnHeight = 40;
+          btnText = 'SHOP NOW';
+          break;
+          
+        case 4: // Tech
+          btnLeft = canvas.width * 0.25;
+          btnTop = canvas.height * 0.65;
+          btnWidth = 160;
+          btnHeight = 40;
+          btnText = 'SHOP NOW →';
+          break;
+          
+        case 5: // Real estate
+          btnLeft = canvas.width * 0.2;
+          btnTop = canvas.height * 0.8;
+          btnWidth = 220;
+          btnHeight = 45;
+          btnText = 'CONTACT US';
+          break;
+      }
+      
+      // Button shadow
+      const buttonShadow = new fabric.Rect({
+        left: btnLeft + 2,
+        top: btnTop + 2,
+        width: btnWidth,
+        height: btnHeight,
+        fill: 'rgba(0,0,0,0.2)',
+        rx: designStyle === 0 || designStyle === 3 ? btnHeight/2 : 5,
+        ry: designStyle === 0 || designStyle === 3 ? btnHeight/2 : 5,
+        opacity: 0.5
+      });
+      canvas.add(buttonShadow);
+      
+      // Main button
+      const ctaButton = new fabric.Rect({
+        left: btnLeft,
+        top: btnTop,
+        width: btnWidth,
+        height: btnHeight,
+        fill: btnColor,
+        rx: designStyle === 0 || designStyle === 3 ? btnHeight/2 : 5,
+        ry: designStyle === 0 || designStyle === 3 ? btnHeight/2 : 5,
+        shadow: new fabric.Shadow({
+          color: 'rgba(0,0,0,0.2)',
+          blur: 15,
+          offsetX: 0,
+          offsetY: 5
+        })
+      });
+      canvas.add(ctaButton);
+      
+      // Button text
+      const ctaText = new fabric.Text(btnText, {
+        left: btnLeft + btnWidth/2,
+        top: btnTop + btnHeight/2,
+        fontSize: 20,
+        fontFamily: 'Arial Black',
+        fill: '#FFFFFF',
+        originX: 'center',
+        originY: 'center',
+        shadow: new fabric.Shadow({
+          color: 'rgba(0,0,0,0.2)',
+          blur: 2,
+          offsetX: 0,
+          offsetY: 1
+        })
+      });
+      canvas.add(ctaText);
+      
+      // Add finishing elements based on style
+      if (designStyle === 0) { // Black Friday
+        // Add date information
+        const dateText = new fabric.Text('LIMITED TIME OFFER', {
+          left: canvas.width * 0.5,
+          top: canvas.height * 0.95,
+          fontSize: 14,
+          fontFamily: 'Arial',
+          fill: '#FFFFFF',
+          originX: 'center',
+          originY: 'center',
+          opacity: 0.8
+        });
+        canvas.add(dateText);
+      } 
+      else if (designStyle === 1) { // Fashion
+        // Add category tag
+        const categoryBg = new fabric.Rect({
+          left: canvas.width * 0.5 - 50,
+          top: 10,
+          width: 100,
+          height: 30,
+          fill: '#000000',
+          rx: 15,
+          ry: 15
+        });
+        canvas.add(categoryBg);
+        
+        const categoryText = new fabric.Text('FASHION', {
+          left: canvas.width * 0.5,
+          top: 25,
+          fontSize: 16,
+          fontFamily: 'Arial Black',
+          fill: '#FFFFFF',
+          originX: 'center',
+          originY: 'center'
+        });
+        canvas.add(categoryText);
+      }
+      else if (designStyle === 5) { // Real estate
+        // Add feature bullets
+        const features = ['Features', 'Location', 'Price'];
+        
+        features.forEach((feature, index) => {
+          const featureText = new fabric.Text(feature, {
+            left: canvas.width * 0.82,
+            top: canvas.height * 0.33 + (index * 60),
+            fontSize: 14,
+            fontFamily: 'Arial',
+            fill: '#FFFFFF',
+            originX: 'center',
+            originY: 'center'
+          });
+          canvas.add(featureText);
+        });
+      }
+      
+      canvas.renderAll();
+
+    } catch (error) {
+      console.error('Error generating banner:', error);
+      showError('Error generating banner. Please try again.');
+    }
+  }
+
+  // Generate a short, attractive description using LLM
+  async function generateShortDescription(description) {
+    // Placeholder for LLM integration
+    // For now, return a shortened version of the description
+    return description.split(' ').slice(0, 10).join(' ') + '...';
+  }
+
+  // Initialize MobileNet model
+  async function initModel() {
+    try {
+      model = await mobilenet.load();
+      console.log('MobileNet model loaded');
+    } catch (error) {
+      console.error('Error loading model:', error);
+      showError('Failed to load AI model. Please try again later.');
+    }
+  }
+
+  // Initialize canvas
+  function initCanvas() {
+    canvas = new fabric.Canvas('adCanvas');
+    canvas.setWidth(800);
+    canvas.setHeight(200);
+  }
+
+  // Show error message on canvas
+  function showError(message) {
+    if (canvas) {
+      canvas.clear();
+      const errorText = new fabric.Text(message, {
+        left: canvas.width / 2,
+        top: canvas.height / 2,
+        fontSize: 20,
+    fontFamily: 'Arial',
+        fill: '#ff0000',
+        originX: 'center',
+        originY: 'center'
+      });
+      canvas.add(errorText);
+      canvas.renderAll();
+    }
+  }
+
+  // Wait for image to load
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = src;
+    });
+  }
+
+  // Analyze image using MobileNet
+  async function analyzeImage(imageElement) {
+    try {
+      // Wait for the image to be fully loaded
+      await new Promise(resolve => {
+        if (imageElement.complete) {
+          resolve();
+        } else {
+          imageElement.onload = resolve;
+        }
+      });
+
+      // Check if image has valid dimensions
+      if (imageElement.width === 0 || imageElement.height === 0) {
+        throw new Error('Invalid image dimensions');
+      }
+
+      // Create a temporary canvas with the image
+      const tempCanvas = document.createElement('canvas');
+      const ctx = tempCanvas.getContext('2d');
+      tempCanvas.width = imageElement.width;
+      tempCanvas.height = imageElement.height;
+      ctx.drawImage(imageElement, 0, 0);
+
+      // Perform classification
+      const predictions = await model.classify(imageElement);
+      
+      imageFeatures = {
+        predictions,
+        dominantColors: await extractDominantColors(imageElement),
+        dimensions: {
+          width: imageElement.width,
+          height: imageElement.height,
+          aspectRatio: imageElement.width / imageElement.height
+        }
+      };
+      
+      displayFeatures(imageFeatures);
+      return imageFeatures;
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      showError('Failed to analyze image. Please try a different image.');
+      imageFeatures = {
+        predictions: [{ className: 'Product', probability: 1 }],
+        dominantColors: ['#333333', '#666666', '#999999'],
+        dimensions: { width: 0, height: 0, aspectRatio: 1 }
+      };
+    }
+  }
+
+  // Extract dominant colors from image
+  async function extractDominantColors(imageElement) {
+    try {
+      const tempCanvas = document.createElement('canvas');
+      const ctx = tempCanvas.getContext('2d');
+      tempCanvas.width = 50;  // Reduce size for performance
+      tempCanvas.height = 50;
+      ctx.drawImage(imageElement, 0, 0);
+      const imageData = ctx.getImageData(0, 0, 50, 50).data;
+      
+      const colorCounts = {};
+      for (let i = 0; i < imageData.length; i += 4) {
+        // Skip transparent pixels
+        if (imageData[i + 3] < 128) continue;
+        
+        const color = `${imageData[i]},${imageData[i+1]},${imageData[i+2]}`;
+        colorCounts[color] = (colorCounts[color] || 0) + 1;
+      }
+      
+      // Default colors if none are found
+      const defaultColors = ['#333333', '#666666', '#999999'];
+      
+      const extractedColors = Object.entries(colorCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([color]) => `rgb(${color})`);
+
+      // Return extracted colors or fall back to defaults
+      return extractedColors.length > 0 ? extractedColors : defaultColors;
+    } catch (error) {
+      console.error('Error extracting colors:', error);
+      return ['#333333', '#666666', '#999999']; // Default colors on error
+    }
+  }
+
+  // Display detected features
+  function displayFeatures(features) {
+    const featuresDiv = document.getElementById('imageFeatures');
+    featuresDiv.innerHTML = `
+      <p><strong>Detected:</strong> ${features.predictions[0].className}</p>
+      <p><strong>Confidence:</strong> ${Math.round(features.predictions[0].probability * 100)}%</p>
+      <div style="display: flex; gap: 10px;">
+        <strong>Colors:</strong>
+        ${features.dominantColors.map(color => 
+          `<div style="width: 20px; height: 20px; background: ${color}; border: 1px solid #000;"></div>`
+        ).join('')}
+      </div>
+    `;
+  }
+
+  // Event Listeners
+  document.addEventListener('DOMContentLoaded', async () => {
+    await initModel();
+    initCanvas();
+
+    const imageUpload = document.getElementById('productImage');
+    const imagePreview = document.getElementById('imagePreview');
+    const generateButton = document.getElementById('generateBanner');
+    const downloadButton = document.getElementById('downloadBanner');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    imageUpload.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        try {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            try {
+              const img = await loadImage(e.target.result);
+              imagePreview.src = img.src;
+              imagePreview.style.display = 'block';
+              currentImage = img;
+              
+              // Extract colors from image
+              const imageColors = await extractDominantColors(img);
+              console.log('Extracted colors:', imageColors);
+            } catch (error) {
+              console.error('Error loading preview image:', error);
+              showError('Failed to load image. Please try a different image.');
+            }
+          };
+          reader.onerror = () => {
+            showError('Failed to read image file. Please try again.');
+          };
+          reader.readAsDataURL(file);
+        } catch (error) {
+          console.error('Error handling file upload:', error);
+          showError('Failed to process image. Please try again.');
+        }
+      }
+    });
+
+    generateButton.addEventListener('click', async () => {
+      const productName = document.getElementById('productName').value;
+      const productDescription = document.getElementById('productDescription').value;
+      const productPrice = document.getElementById('productPrice').value;
+      const designPrompt = document.getElementById('designPrompt').value;
+
+      if (!productName || !productDescription) {
+        showError('Please provide product name and description');
+        return;
+      }
+
+      loadingIndicator.style.display = 'block';
+
+      try {
+        // Extract colors from current image
+        const imageColors = currentImage ? await extractDominantColors(currentImage) : null;
+
+        const productDetails = {
+          name: productName,
+          description: productDescription,
+          price: productPrice,
+          designPrompt: designPrompt
+        };
+
+        const designSpecs = await generateDesignPrompt(productDetails, imageColors);
+        await generateBanner(designSpecs, currentImage);
+      } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to generate banner. Please try again.');
+      } finally {
+        loadingIndicator.style.display = 'none';
+      }
+    });
+
+    downloadButton.addEventListener('click', () => {
+      if (canvas) {
+        const link = document.createElement('a');
+        link.download = 'product-banner.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

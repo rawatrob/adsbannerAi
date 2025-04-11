@@ -1,0 +1,219 @@
+{
+  "adName": "Dream Vacation Ad",
+  "type": "Travel & Tourism",
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "elements": [
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "fill": "#ffffff",
+        "selectable": false
+      }
+    },
+    {
+      "type": "image",
+      "properties": {
+        "url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "selectable": false,
+        "opacity": 0.3
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 40,
+        "top": 40,
+        "width": 720,
+        "height": 520,
+        "fill": "transparent",
+        "stroke": "#E74C3C",
+        "strokeWidth": 2,
+        "selectable": false
+      }
+    },
+    {
+      "type": "image",
+      "properties": {
+        "url": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+        "left": 60,
+        "top": 60,
+        "width": 380,
+        "height": 280,
+        "selectable": false,
+        "opacity": 1
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "EXPLORE",
+        "left": 480,
+        "top": 80,
+        "fontSize": 72,
+        "fontWeight": "800",
+        "fill": "#2C3E50",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "DREAM",
+        "left": 480,
+        "top": 160,
+        "fontSize": 72,
+        "fontWeight": "800",
+        "fill": "#2C3E50",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "DISCOVER",
+        "left": 480,
+        "top": 240,
+        "fontSize": 72,
+        "fontWeight": "800",
+        "fill": "#2C3E50",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 60,
+        "top": 380,
+        "width": 380,
+        "height": 160,
+        "fill": "#2C3E50",
+        "selectable": false,
+        "opacity": 0.9,
+        "rx": 5,
+        "ry": 5
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "SUMMER",
+        "left": 80,
+        "top": 390,
+        "fontSize": 42,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "PACKAGE",
+        "left": 80,
+        "top": 435,
+        "fontSize": 42,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "$499",
+        "left": 80,
+        "top": 485,
+        "fontSize": 52,
+        "fontWeight": "bold",
+        "fill": "#E74C3C",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 480,
+        "top": 380,
+        "width": 280,
+        "height": 160,
+        "fill": "#E74C3C",
+        "selectable": false,
+        "opacity": 0.9,
+        "rx": 5,
+        "ry": 5
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "BOOK NOW",
+        "left": 500,
+        "top": 410,
+        "fontSize": 42,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "& GET",
+        "left": 500,
+        "top": 455,
+        "fontSize": 32,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "30% OFF",
+        "left": 500,
+        "top": 490,
+        "fontSize": 42,
+        "fontWeight": "bold",
+        "fill": "#ffffff",
+        "fontFamily": "Arial Black",
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 40,40 L 90,40 L 90,45 L 45,45 L 45,90 L 40,90 Z",
+        "fill": "#E74C3C",
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 760,560 L 710,560 L 710,555 L 755,555 L 755,510 L 760,510 Z",
+        "fill": "#E74C3C",
+        "selectable": false
+      }
+    }
+  ]
+} 

@@ -1,0 +1,239 @@
+{
+  "adName": "Fried Chicken Ad",
+  "type": "Food & Beverage",
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "elements": [
+    {
+      "type": "image",
+      "properties": {
+        "url": "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=800&q=80",
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "selectable": false,
+        "scaleX": 1,
+        "scaleY": 1,
+        "opacity": 0.9
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 0,
+        "top": 0,
+        "width": 800,
+        "height": 600,
+        "fill": "rgba(0,0,0,0.4)",
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 0,0 L 800,0 L 750,50 L 50,50 Z",
+        "fill": "#FF4500",
+        "opacity": 0.9,
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 0,600 L 800,600 L 750,550 L 50,550 Z",
+        "fill": "#FF4500",
+        "opacity": 0.9,
+        "selectable": false
+      }
+    },
+    {
+      "type": "circle",
+      "properties": {
+        "left": 650,
+        "top": 250,
+        "radius": 100,
+        "fill": "#FFD700",
+        "opacity": 0.9,
+        "selectable": false,
+        "shadow": "3px 3px 10px rgba(0,0,0,0.5)"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "CRISPY",
+        "left": 50,
+        "top": 80,
+        "fontSize": 100,
+        "fontWeight": "800",
+        "fill": "#FFD700",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "5px 5px 0 #000000",
+        "angle": -8,
+        "skewX": 10
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "DELICIOUS",
+        "left": 50,
+        "top": 180,
+        "fontSize": 120,
+        "fontWeight": "800",
+        "fill": "#FF4500",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "5px 5px 0 #000000",
+        "angle": -8,
+        "skewX": 10
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "IRRESISTIBLE",
+        "left": 50,
+        "top": 300,
+        "fontSize": 90,
+        "fontWeight": "800",
+        "fill": "#FFFFFF",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "5px 5px 0 #000000",
+        "angle": -8,
+        "skewX": 10
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 600,250 L 700,250 L 750,300 L 550,300 Z",
+        "fill": "#000000",
+        "opacity": 0.8,
+        "selectable": false
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "ORDER",
+        "left": 580,
+        "top": 220,
+        "fontSize": 50,
+        "fontWeight": "800",
+        "fill": "#000000",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "angle": 0
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "NOW!",
+        "left": 590,
+        "top": 270,
+        "fontSize": 60,
+        "fontWeight": "800",
+        "fill": "#FFD700",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "angle": 0
+      }
+    },
+    {
+      "type": "rect",
+      "properties": {
+        "left": 30,
+        "top": 420,
+        "width": 500,
+        "height": 120,
+        "fill": "#FF4500",
+        "opacity": 0.9,
+        "rx": 15,
+        "ry": 15,
+        "selectable": false,
+        "shadow": "3px 3px 10px rgba(0,0,0,0.5)"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "LIMITED TIME OFFER!",
+        "left": 50,
+        "top": 440,
+        "fontSize": 45,
+        "fontWeight": "bold",
+        "fill": "#FFD700",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "3px 3px 0 #000000"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "Order Now",
+        "left": 50,
+        "top": 490,
+        "fontSize": 40,
+        "fontWeight": "bold",
+        "fill": "#FFFFFF",
+        "fontFamily": "Arial Black",
+        "selectable": false,
+        "shadow": "2px 2px 0 #000000"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "&",
+        "left": 220,
+        "top": 490,
+        "fontSize": 40,
+        "fontWeight": "bold",
+        "fill": "#FFFFFF",
+        "fontFamily": "Arial Black",
+        "selectable": false,
+        "shadow": "2px 2px 0 #000000"
+      }
+    },
+    {
+      "type": "text",
+      "properties": {
+        "text": "20% OFF",
+        "left": 260,
+        "top": 485,
+        "fontSize": 50,
+        "fontWeight": "bold",
+        "fill": "#FFD700",
+        "fontFamily": "Impact",
+        "selectable": false,
+        "shadow": "3px 3px 0 #000000"
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 20,20 L 40,20 L 40,40 L 20,40 Z M 60,20 L 80,20 L 80,40 L 60,40 Z",
+        "fill": "#FFD700",
+        "opacity": 0.8,
+        "selectable": false
+      }
+    },
+    {
+      "type": "path",
+      "properties": {
+        "path": "M 720,560 L 740,560 L 740,580 L 720,580 Z M 760,560 L 780,560 L 780,580 L 760,580 Z",
+        "fill": "#FFD700",
+        "opacity": 0.8,
+        "selectable": false
+      }
+    }
+  ]
+} 
